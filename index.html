@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudou - Painel Completo de Estudos</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen flex flex-col transition-colors duration-200">
+
+    <!-- Topbar / Cabeçalho -->
+    <header class="bg-emerald-700 dark:bg-emerald-900 text-white shadow-md sticky top-0 z-50 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center w-full">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                <span class="text-xl font-bold tracking-wider">estudou</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- Botão Modo Escuro -->
+                <button onclick="alternarDarkMode()" class="bg-emerald-800 dark:bg-emerald-950 hover:bg-emerald-600 p-2.5 rounded-lg text-sm transition" title="Alternar Modo Escuro">
+                    <i id="icone-dark" class="fa-solid fa-moon"></i>
+                </button>
+                <button onclick="abrirModalEstudo()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Adicionar Estudo</span>
+                </button>
+                <button onclick="abrirModalMatéria()" class="bg-emerald-800 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition flex items-center space-x-2">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Gerenciar Matérias</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Layout com Menu Lateral e Conteúdo -->
+    <div class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 md:grid-cols-4 gap-6 w-full flex-grow">
+        
+        <!-- Menu Lateral (Sidebar) -->
+        <aside class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 md:col-span-1 h-fit space-y-2 transition-colors">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Menu de Navegação</p>
+            <button onclick="mudarAba('painel')" id="menu-painel" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400">
+                <i class="fa-solid fa-chart-pie w-5"></i>
+                <span>Painel & Matérias</span>
+            </button>
+            <button onclick="mudarAba('calendario')" id="menu-calendario" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-calendar-days w-5"></i>
+                <span>Calendário de Estudos</span>
+            </button>
+            <button onclick="mudarAba('revisoes')" id="menu-revisoes" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-bell w-5"></i>
+                <span>Revisões (7, 15, 30d)</span>
+            </button>
+            <button onclick="mudarAba('questoes')" id="menu-questoes" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">
+                <i class="fa-solid fa-list-check w-5"></i>
+                <span>Controle de Questões</span>
+            </button>
+
+            <!-- Seção de Backup de Dados -->
+            <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-700 space-y-2">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3">Dados (Backup)</p>
+                <button onclick="exportarBackup()" class="w-full flex items-center space-x-2 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
+                    <i class="fa-solid fa-download w-4"></i> <span>Exportar Backup</span>
+                </button>
+                <label class="w-full flex items-center space-x-2 px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition cursor-pointer">
+                    <i class="fa-solid fa-upload w-4"></i> <span>Importar Backup</span>
+                    <input type="file" id="input-importar" accept=".json" onchange="importarBackup(event)" class="hidden">
+                </label>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Dinâmico das Abas -->
+        <main class="md:col-span-3 space-y-6">
+
+            <!-- ABA 1: PAINEL & MATÉRIAS -->
+            <div id="aba-painel" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tempo Total</p>
+                        <h2 id="total-tempo-estudo" class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-2">0h 00min</h2>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Aproveitamento Questões</p>
+                        <h2 id="total-desempenho-questoes" class="text-3xl font-extrabold text-slate-700 dark:text-slate-200 mt-2">0%</h2>
+                    </div>
+                    <div class="bg-emerald-900 text-emerald-50 p-5 rounded-2xl shadow-sm flex flex-col justify-center">
+                        <p class="text-xs text-emerald-300 font-medium uppercase tracking-wider">Foco</p>
+                        <p class="text-sm italic mt-1">"Constância vence o talento."</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                        <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200 mb-4"><i class="fa-solid fa-table-list mr-2 text-emerald-600"></i>Tempo por Disciplina</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 dark:border-slate-700 text-xs font-semibold text-slate-400 uppercase">
+                                        <th class="py-3 px-2">Disciplina / Tópicos</th>
+                                        <th class="py-3 px-2">Tempo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabela-disciplinas-corpo" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col transition-colors">
+                        <h3 class="font-bold text-lg text-slate-700 dark:text-slate-200 mb-4"><i class="fa-solid fa-clock-rotate-left mr-2 text-emerald-600"></i>Histórico & Gerenciamento</h3>
+                        <div id="lista-historico-sessoes" class="space-y-3 overflow-y-auto max-h-[250px] pr-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 2: CALENDÁRIO -->
+            <div id="aba-calendario" class="space-y-6 hidden">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b dark:border-slate-700 pb-4">
+                        <h3 class="font-bold text-xl text-slate-800 dark:text-slate-100 flex items-center">
+                            <i class="fa-solid fa-calendar-days mr-2 text-emerald-600"></i>Calendário de Estudos
+                        </h3>
+                        <div class="flex items-center space-x-3 mt-3 sm:mt-0">
+                            <button onclick="mudarMes(-1)" class="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                <i class="fa-solid fa-arrow-left mr-1"></i> Anterior
+                            </button>
+                            <span id="mes-ano-titulo" class="text-lg font-bold text-slate-700 dark:text-slate-200 min-w-[180px] text-center">Agosto de 2026</span>
+                            <button onclick="mudarMes(1)" class="bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg text-sm font-semibold transition">
+                                Próximo <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 gap-px bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden text-center">
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Dom</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Seg</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Ter</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Qua</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Qui</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Sexta</div>
+                        <div class="bg-slate-50 dark:bg-slate-800 py-3 text-xs font-bold text-slate-500 uppercase">Sáb</div>
+                        <div id="grid-dias-calendario" class="contents"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ABA 3: REVISÕES -->
+            <div id="aba-revisoes" class="space-y-6 hidden">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
+                    <div class="flex justify-between items-center mb-4 border-b dark:border-slate-700 pb-3">
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center">
+                            <i class="fa-solid fa-bell mr-2 text-emerald-600"></i>Cronograma de Revisões (7, 15 e 30 dias)
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="grid-revisoes"></div>
+                </div>
+            </div>
+
+            <!-- ABA 4: CONTROLE DE QUESTÕES -->
+            <div id="aba-questoes" class="space-y-6 hidden">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-6 transition-colors">
+                    <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center">
+                            <i class="fa-solid fa-list-check mr-2 text-emerald-600"></i>Controle de Resolução de Questões
+                        </h3>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Matéria</label>
+                            <select id="q-materia" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500"></select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Acertos</label>
+                            <input type="number" id="q-acertos" placeholder="Ex: 15" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Erros</label>
+                            <input type="number" id="q-erros" placeholder="Ex: 3" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500">
+                        </div>
+                        <button onclick="salvarQuestoes()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium shadow h-[38px]">
+                            <i class="fa-solid fa-plus mr-1"></i> Registrar
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 dark:border-slate-700 text-xs font-semibold text-slate-400 uppercase">
+                                    <th class="py-3 px-2">Disciplina</th>
+                                    <th class="py-3 px-2">Acertos</th>
+                                    <th class="py-3 px-2">Erros</th>
+                                    <th class="py-3 px-2">Total Feitas</th>
+                                    <th class="py-3 px-2">Aproveitamento</th>
+                                    <th class="py-3 px-2 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-questoes-corpo" class="divide-y divide-slate-100 dark:divide-slate-700 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE CRONÔMETRO COM POMODORO -->
+    <div id="modal-estudo" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5 transition-colors">
+            <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Registrar Estudo</h3>
+                <button onclick="fecharModalEstudo()" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            
+            <!-- Abas do Cronômetro / Pomodoro -->
+            <div class="flex bg-slate-100 dark:bg-slate-700 p-1 rounded-xl text-xs font-semibold">
+                <button onclick="mudarModoTimer('cronometro')" id="tab-cronometro" class="flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-emerald-600">Cronômetro Livre</button>
+                <button onclick="mudarModoTimer('pomodoro')" id="tab-pomodoro" class="flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-300">Pomodoro (25m)</button>
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-xl text-center border border-slate-200 dark:border-slate-700 space-y-3">
+                <span id="label-modo-timer" class="text-xs font-bold text-slate-400 uppercase tracking-widest">Cronômetro Ao Vivo</span>
+                <div id="display-cronometro" class="text-5xl font-mono font-extrabold text-slate-700 dark:text-slate-100">00:00:00</div>
+                <div class="flex justify-center space-x-2 pt-2">
+                    <button onclick="iniciarCronometro()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition">Iniciar</button>
+                    <button onclick="pausarCronometro()" class="bg-amber-500 hover:bg-amber-400 text-white px-4 py-2 rounded-lg font-medium text-sm transition">Pausar</button>
+                    <button onclick="zerarCronometro()" class="bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-medium text-sm transition">Zerar</button>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Matéria</label>
+                    <select id="select-materia-estudo" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Data</label>
+                    <input type="date" id="input-data-estudo" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-300 uppercase mb-1">Minutos Manuais</label>
+                    <input type="number" id="input-minutos-manual" placeholder="Ex: 45" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-3 border-t dark:border-slate-700">
+                <button onclick="fecharModalEstudo()" class="px-4 py-2 rounded-lg text-slate-500 text-sm">Cancelar</button>
+                <button onclick="salvarEstudo()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm shadow">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE GERENCIAR MATÉRIAS -->
+    <div id="modal-materia" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-5 transition-colors">
+            <div class="flex justify-between items-center border-b dark:border-slate-700 pb-3">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Gerenciar Matérias & Tópicos</h3>
+                <button onclick="fecharModalMatéria()" class="text-slate-400 hover:text-slate-600 text-xl">&times;</button>
+            </div>
+            <div class="space-y-3 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200">Nova Disciplina</h4>
+                <input type="text" id="input-nova-materia" placeholder="Ex: Direito Administrativo" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <button onclick="adicionarMateria()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg text-sm font-medium shadow">Cadastrar Disciplina</button>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200">Adicionar Tópico (Cria Revisões 7, 15, 30d)</h4>
+                <select id="select-materia-topico" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500"></select>
+                <input type="text" id="input-nome-topico" placeholder="Ex: Atos Administrativos" class="w-full border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg p-2 text-sm focus:outline-none focus:border-emerald-500">
+                <button onclick="adicionarTopico()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg text-sm font-medium shadow">Adicionar Tópico</button>
+            </div>
+            <div class="flex justify-end pt-3 border-t dark:border-slate-700">
+                <button onclick="fecharModalMatéria()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-lg text-sm">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE FUNCIONAMENTO -->
+    <script>
+        let dataAtualCalendario = new Date();
+        let dadosApp = JSON.parse(localStorage.getItem('estudou_dados_v5')) || {
+            materias: [
+                { id: '1', nome: 'Contabilidade Geral', topicos: [] },
+                { id: '2', nome: 'Informática', topicos: [] }
+            ],
+            sessoes: [],
+            questoes: []
+        };
+
+        // Carregar Tema Escuro salvo
+        if (localStorage.getItem('estudou_dark') === 'true') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('icone-dark').className = "fa-solid fa-sun";
+        }
+
+        function alternarDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('estudou_dark', isDark);
+            document.getElementById('icone-dark').className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
+        }
+
+        function salvarNoLocalStorage() {
+            localStorage.setItem('estudou_dados_v5', JSON.stringify(dadosApp));
+            atualizarInterface();
+        }
+
+        // Exportar e Importar Backup
+        function exportarBackup() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosApp));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "backup_estudou.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importarBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    dadosApp = JSON.parse(e.target.result);
+                    salvarNoLocalStorage();
+                    alert('Backup importado com sucesso!');
+                } catch (err) {
+                    alert('Erro ao ler o arquivo de backup.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function mudarAba(abaId) {
+            ['painel', 'calendario', 'revisoes', 'questoes'].forEach(id => {
+                document.getElementById(`aba-${id}`).classList.add('hidden');
+                document.getElementById(`menu-${id}`).className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700";
+            });
+            document.getElementById(`aba-${abaId}`).classList.remove('hidden');
+            document.getElementById(`menu-${abaId}`).className = "w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400";
+        }
+
+        function formatarTempo(minutosTotais) {
+            const horas = Math.floor(minutosTotais / 60);
+            const minutos = minutosTotais % 60;
+            return `${horas}h ${minutos < 10 ? '0' : ''}${minutos}min`;
+        }
+
+        function atualizarInterface() {
+            atualizarTabelaESelects();
+            renderizarCalendario();
+            renderizarHistorico();
+            renderizarRevisoes();
+            renderizarQuestoes();
+        }
+
+        function atualizarTabelaESelects() {
+            const tbody = document.getElementById('tabela-disciplinas-corpo');
+            const selectEstudo = document.getElementById('select-materia-estudo');
+            const selectTopicoMat = document.getElementById('select-materia-topico');
+            const selectQuestoes = document.getElementById('q-materia');
+
+            tbody.innerHTML = '';
+            selectEstudo.innerHTML = '';
+            selectTopicoMat.innerHTML = '';
+            selectQuestoes.innerHTML = '';
+
+            let totalMinutosGeral = 0;
+
+            dadosApp.materias.forEach(materia => {
+                let minutosMateria = dadosApp.sessoes
+                    .filter(s => s.materiaId === materia.id)
+                    .reduce((acc, s) => acc + s.minutos, 0);
+
+                totalMinutosGeral += minutosMateria;
+
+                selectEstudo.innerHTML += `<option value="${materia.id}">${materia.nome}</option>`;
+                selectTopicoMat.innerHTML += `<option value="${materia.id}">${materia.nome}</option>`;
+                selectQuestoes.innerHTML += `<option value="${materia.id}">${materia.nome}</option>`;
+
+                let listaTopicosHtml = materia.topicos.map(t => `<div class="text-xs text-slate-500 dark:text-slate-400">• ${t.nome}</div>`).join('');
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                        <td class="py-3 px-2">
+                            <span class="font-medium text-slate-700 dark:text-slate-200 block">${materia.nome}</span>
+                            <div class="mt-1 space-y-0.5">${listaTopicosHtml || '<span class="text-xs text-slate-400">Nenhum tópico</span>'}</div>
+                        </td>
+                        <td class="py-3 px-2 text-slate-600 dark:text-slate-300 font-semibold align-top">${formatarTempo(minutosMateria)}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('total-tempo-estudo').innerText = formatarTempo(totalMinutosGeral);
+        }
+
+        // Questões Lógica
+        function salvarQuestoes() {
+            const materiaId = document.getElementById('q-materia').value;
+            const acertos = parseInt(document.getElementById('q-acertos').value) || 0;
+            const erros = parseInt(document.getElementById('q-erros').value) || 0;
+
+            if (acertos + erros <= 0) return alert('Insira a quantidade de acertos ou erros.');
+
+            dadosApp.questoes.push({ id: 'q_' + Date.now(), materiaId, acertos, erros });
+            document.getElementById('q-acertos').value = '';
+            document.getElementById('q-erros').value = '';
+            salvarNoLocalStorage();
+        }
+
+        function renderizarQuestoes() {
+            const tbody = document.getElementById('tabela-questoes-corpo');
+            tbody.innerHTML = '';
+            let totalAcertosGeral = 0, totalErrosGeral = 0;
+
+            if (dadosApp.questoes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-xs text-slate-400 text-center py-4">Nenhuma questão registrada.</td></tr>`;
+            }
+
+            dadosApp.questoes.forEach(q => {
+                const materia = dadosApp.materias.find(m => m.id === q.materiaId);
+                const nomeMateria = materia ? materia.nome : 'Matéria Excluída';
+                const totalFeitas = q.acertos + q.erros;
+                const aproveitamento = totalFeitas > 0 ? Math.round((q.acertos / totalFeitas) * 100) : 0;
+
+                totalAcertosGeral += q.acertos;
+                totalErrosGeral += q.erros;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
+                        <td class="py-3 px-2 font-medium text-slate-700 dark:text-slate-200">${nomeMateria}</td>
+                        <td class="py-3 px-2 text-emerald-600 dark:text-emerald-400 font-bold">${q.acertos}</td>
+                        <td class="py-3 px-2 text-rose-500 font-bold">${q.erros}</td>
+                        <td class="py-3 px-2 text-slate-600 dark:text-slate-300">${totalFeitas}</td>
+                        <td class="py-3 px-2 font-bold text-slate-700 dark:text-slate-200">${aproveitamento}%</td>
+                        <td class="py-3 px-2 text-right">
+                            <button onclick="apagarQuestao('${q.id}')" class="text-rose-500 hover:text-rose-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            let totalGeralQ = totalAcertosGeral + totalErrosGeral;
+            let aproveitamentoGeral = totalGeralQ > 0 ? Math.round((totalAcertosGeral / totalGeralQ) * 100) : 0;
+            document.getElementById('total-desempenho-questoes').innerText = aproveitamentoGeral + '%';
+        }
+
+        function apagarQuestao(id) {
+            dadosApp.questoes = dadosApp.questoes.filter(q => q.id !== id);
+            salvarNoLocalStorage();
+        }
+
+        // Revisões
+        function renderizarRevisoes() {
+            const grid = document.getElementById('grid-revisoes');
+            grid.innerHTML = '';
+            let todasRevisoes = [];
+
+            dadosApp.materias.forEach(materia => {
+                materia.topicos.forEach(topico => {
+                    topico.revisoes.forEach((rev, revIdx) => {
+                        if (!rev.concluida) {
+                            todasRevisoes.push({ materiaNome: materia.nome, topicoNome: topico.nome, topicoId: topico.id, revIdx, dias: rev.dias, data: rev.data });
+                        }
+                    });
+                });
+            });
+
+            if (todasRevisoes.length === 0) {
+                grid.innerHTML = `<p class="text-xs text-slate-400 col-span-2 text-center py-4">Nenhuma revisão pendente!</p>`;
+                return;
+            }
+
+            todasRevisoes.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+            todasRevisoes.forEach(rev => {
+                grid.innerHTML += `
+                    <div class="bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-700 p-4 rounded-xl flex flex-col justify-between space-y-2">
+                        <div>
+                            <span class="text-[10px] font-bold bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded uppercase">Revisão ${rev.dias} dias</span>
+                            <h4 class="font-bold text-slate-700 dark:text-slate-100 text-sm mt-1">${rev.topicoNome}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">${rev.materiaNome} • Data: <b>${rev.data}</b></p>
+                        </div>
+                        <button onclick="concluirRevisao('${rev.topicoId}', ${rev.revIdx})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded-lg text-xs font-semibold transition shadow-sm">
+                            <i class="fa-solid fa-check mr-1"></i> Concluir
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function concluirRevisao(topicoId, revIdx) {
+            dadosApp.materias.forEach(materia => {
+                materia.topicos.forEach(topico => {
+                    if (topico.id === topicoId) topico.revisoes[revIdx].concluida = true;
+                });
+            });
+            salvarNoLocalStorage();
+        }
+
+        // Calendário
+        function renderizarCalendario() {
+            const grid = document.getElementById('grid-dias-calendario');
+            const tituloMesAno = document.getElementById('mes-ano-titulo');
+            grid.innerHTML = '';
+
+            const ano = dataAtualCalendario.getFullYear();
+            const mes = dataAtualCalendario.getMonth();
+            const nomesMeses = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            tituloMesAno.innerText = `${nomesMeses[mes]} de ${ano}`;
+
+            const primeiroDia = new Date(ano, mes, 1).getDay();
+            const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+
+            for (let i = 0; i < primeiroDia; i++) {
+                grid.innerHTML += `<div class="bg-white dark:bg-slate-800 border-b dark:border-slate-700 border-r min-h-[90px]"></div>`;
+            }
+
+            for (let dia = 1; dia <= ultimoDia; dia++) {
+                const mesStr = String(mes + 1).padStart(2, '0');
+                const diaStr = String(dia).padStart(2, '0');
+                const dataIso = `${ano}-${mesStr}-${diaStr}`;
+                const sessoesDia = dadosApp.sessoes.filter(s => s.data === dataIso);
+                let temEstudo = sessoesDia.length > 0;
+                let totalMinutosDia = sessoesDia.reduce((acc, s) => acc + s.minutos, 0);
+
+                let bgClass = temEstudo ? 'bg-emerald-100/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800' : 'bg-white dark:bg-slate-800';
+                let conteudo = `<div class="text-right font-bold text-sm text-slate-700 dark:text-slate-300 mb-1">${dia}</div>`;
+                if (temEstudo) {
+                    conteudo += `<div class="text-left text-xs text-emerald-900 dark:text-emerald-300 mt-2 font-bold"><i class="fa-solid fa-stopwatch text-[10px] mr-1"></i>${formatarTempo(totalMinutosDia)}</div>`;
+                }
+                grid.innerHTML += `<div class="${bgClass} min-h-[95px] p-2 border-b dark:border-slate-700 border-r flex flex-col justify-between">${conteudo}</div>`;
+            }
+        }
+
+        function mudarMes(direcao) {
+            dataAtualCalendario.setMonth(dataAtualCalendario.getMonth() + direcao);
+            renderizarCalendario();
+        }
+
+        function renderizarHistorico() {
+            const container = document.getElementById('lista-historico-sessoes');
+            container.innerHTML = '';
+            if (dadosApp.sessoes.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhuma sessão registrada.</p>`;
+                return;
+            }
+            let sessoesOrdenadas = [...dadosApp.sessoes].sort((a, b) => new Date(b.data) - new Date(a.data));
+            sessoesOrdenadas.forEach(sessao => {
+                const materia = dadosApp.materias.find(m => m.id === sessao.materiaId);
+                const nomeMateria = materia ? materia.nome : 'Matéria Excluída';
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm">
+                        <div>
+                            <span class="font-bold text-slate-700 dark:text-slate-200">${nomeMateria}</span>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">${sessao.data} • <b>${formatarTempo(sessao.minutos)}</b></div>
+                        </div>
+                        <button onclick="apagarSessao('${sessao.id}')" class="text-rose-500 hover:text-rose-700 px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function apagarSessao(id) {
+            dadosApp.sessoes = dadosApp.sessoes.filter(s => s.id !== id);
+            salvarNoLocalStorage();
+        }
+
+        // Modais e Cronômetro / Pomodoro
+        function abrirModalEstudo() { document.getElementById('modal-estudo').classList.remove('hidden'); document.getElementById('input-data-estudo').value = new Date().toISOString().split('T')[0]; }
+        function fecharModalEstudo() { document.getElementById('modal-estudo').classList.add('hidden'); zerarCronometro(); }
+        function abrirModalMatéria() { document.getElementById('modal-materia').classList.remove('hidden'); }
+        function fecharModalMatéria() { document.getElementById('modal-materia').classList.add('hidden'); }
+
+        let modoTimer = 'cronometro';
+        let tempoSegundos = 0, intervaloCronometro = null, cronometroRodando = false;
+
+        function mudarModoTimer(modo) {
+            modoTimer = modo;
+            pausarCronometro();
+            if (modo === 'pomodoro') {
+                tempoSegundos = 25 * 60;
+                document.getElementById('tab-pomodoro').className = "flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-emerald-600";
+                document.getElementById('tab-cronometro').className = "flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-300";
+                document.getElementById('label-modo-timer').innerText = "Pomodoro (Foco 25m)";
+            } else {
+                tempoSegundos = 0;
+                document.getElementById('tab-cronometro').className = "flex-1 py-1.5 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-emerald-600";
+                document.getElementById('tab-pomodoro').className = "flex-1 py-1.5 rounded-lg text-slate-500 dark:text-slate-300";
+                document.getElementById('label-modo-timer').innerText = "Cronômetro Ao Vivo";
+            }
+            atualizarDisplayCronometro();
+        }
+
+        function atualizarDisplayCronometro() {
+            let tempoExibir = tempoSegundos;
+            let h = Math.floor(tempoExibir / 3600);
+            let m = Math.floor((tempoExibir % 3600) / 60);
+            let s = tempoExibir % 60;
+            document.getElementById('display-cronometro').innerText = `${h > 0 ? (h < 10 ? '0'+h : h) + ':' : ''}${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
+        }
+
+        function iniciarCronometro() {
+            if (!cronometroRodando) {
+                cronometroRodando = true;
+                intervaloCronometro = setInterval(() => {
+                    if (modoTimer === 'pomodoro') {
+                        if (tempoSegundos > 0) {
+                            tempoSegundos--;
+                        } else {
+                            pausarCronometro();
+                            alert('Tempo de Pomodoro concluído! Hora de uma pausa.');
+                        }
+                    } else {
+                        tempoSegundos++;
+                    }
+                    atualizarDisplayCronometro();
+                }, 1000);
+            }
+        }
+
+        function pausarCronometro() { cronometroRodando = false; clearInterval(intervaloCronometro); }
+        function zerarCronometro() {
+            pausarCronometro();
+            tempoSegundos = modoTimer === 'pomodoro' ? 25 * 60 : 0;
+            atualizarDisplayCronometro();
+        }
+
+        function salvarEstudo() {
+            const materiaId = document.getElementById('select-materia-estudo').value;
+            const dataEstudo = document.getElementById('input-data-estudo').value;
+            const minutosManuais = parseInt(document.getElementById('input-minutos-manual').value) || 0;
+            
+            let minutosContados = 0;
+            if (modoTimer === 'cronometro') {
+                minutosContados = Math.floor(tempoSegundos / 60);
+            } else {
+                minutosContados = 25 - Math.floor(tempoSegundos / 60);
+            }
+
+            const totalMinutos = minutosManuais + (minutosContados > 0 ? minutosContados : (tempoSegundos > 0 && modoTimer === 'cronometro' ? 1 : 0));
+
+            if (!dataEstudo || totalMinutos <= 0) return alert('Preencha a data e o tempo estudado.');
+            dadosApp.sessoes.push({ id: 's_' + Date.now(), materiaId, data: dataEstudo, minutos: totalMinutos });
+            salvarNoLocalStorage();
+            fecharModalEstudo();
+            document.getElementById('input-minutos-manual').value = '';
+        }
+
+        function adicionarMateria() {
+            const nome = document.getElementById('input-nova-materia').value.trim();
+            if (!nome) return alert('Digite o nome.');
+            dadosApp.materias.push({ id: 'm_' + Date.now(), nome, topicos: [] });
+            document.getElementById('input-nova-materia').value = '';
+            salvarNoLocalStorage();
+        }
+
+        function adicionarTopico() {
+            const materiaId = document.getElementById('select-materia-topico').value;
+            const nomeTopico = document.getElementById('input-nome-topico').value.trim();
+            if (!nomeTopico) return alert('Digite o tópico.');
+            const materia = dadosApp.materias.find(m => m.id === materiaId);
+            if (materia) {
+                let hoje = new Date();
+                function somarDias(d, n) { let dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0]; }
+                materia.topicos.push({
+                    id: 't_' + Date.now(),
+                    nome: nomeTopico,
+                    revisoes: [
+                        { dias: 7, data: somarDias(hoje, 7), concluida: false },
+                        { dias: 15, data: somarDias(hoje, 15), concluida: false },
+                        { dias: 30, data: somarDias(hoje, 30), concluida: false }
+                    ]
+                });
+                document.getElementById('input-nome-topico').value = '';
+                salvarNoLocalStorage();
+            }
+        }
+
+        window.onload = () => { atualizarInterface(); };
+    </script>
+</body>
+</html>
