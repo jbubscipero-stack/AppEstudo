@@ -290,16 +290,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAh2x-FBq5dSc73wrEa2erW-sqXWTViSl4",
-            authDomain: "appestudo-a1bd5.firebaseapp.com",
-            projectId: "appestudo-a1bd5",
-            storageBucket: "appestudo-a1bd5.firebasestorage.app",
-            messagingSenderId: "590563907402",
-            appId: "1:590563907402:web:e3f0a5430b62963ced13b3",
-            measurementId: "G-8LT3GX31TM"
-        };
+        
+        // Importa as chaves do ficheiro config.js separado
+        import { firebaseConfig } from "./config.js";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -314,7 +307,6 @@
             questoes: []
         };
 
-        // Carregar dados do Firebase ao iniciar
         async function carregarDoFirebase() {
             try {
                 const docRef = doc(db, "painel", "meu_estudo");
@@ -323,12 +315,11 @@
                     window.dadosApp = docSnap.data();
                 }
             } catch (e) {
-                console.error("Erro ao carregar do Firebase, usando dados locais.", e);
+                console.error("Erro ao carregar do Firebase.", e);
             }
             window.atualizarInterface();
         }
 
-        // Salvar dados no Firebase Firestore
         window.salvarNoFirebase = async function() {
             try {
                 await setDoc(doc(db, "painel", "meu_estudo"), window.dadosApp);
@@ -338,7 +329,6 @@
             window.atualizarInterface();
         }
 
-        // Tema Escuro
         if (localStorage.getItem('estudou_dark') === 'true') {
             document.documentElement.classList.add('dark');
             document.getElementById('icone-dark').className = "fa-solid fa-sun";
@@ -352,7 +342,6 @@
             document.getElementById('icone-dark').className = isDark ? "fa-solid fa-sun" : "fa-solid fa-moon";
         }
 
-        // Exportar e Importar Backup JSON
         window.exportarBackup = function() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.dadosApp));
             const downloadAnchor = document.createElement('a');
@@ -721,7 +710,6 @@
             }
         }
 
-        // Executar carregamento do Firebase mal a página abra
         window.onload = () => {
             carregarDoFirebase();
         };
